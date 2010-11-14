@@ -11,9 +11,9 @@ Widget::Widget(QWidget *parent)
 {
     m_inputText->selectAll();
 
-    m_inputText->setMinimumWidth(400);
-    m_resultText->setMinimumWidth(400);
-    m_resultText->setMinimumHeight(400);
+    m_inputText->setMinimumWidth(600);
+    m_resultText->setMinimumWidth(600);
+    m_resultText->setMinimumHeight(200);
     m_resultText->setReadOnly(true);
 
     QVBoxLayout *layout = new QVBoxLayout;
@@ -31,5 +31,5 @@ Widget::~Widget()
 
 void Widget::bereken(QString tekst)
 {
-    m_resultText->setText(GetalOmzetter(tekst).toTextualNumber());
+    m_resultText->setText(GetalOmzetter(tekst).toTextualNumber(" "));
 }
