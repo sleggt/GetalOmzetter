@@ -18,12 +18,11 @@ private:
     QMap<int, QString> *m_groteGetallen;
 
     QString m_basis;
-    QString m_werk;
-    QString m_resultaat;
     QString m_space;
 
     int m_processed;
 
+    QString zetGetalOm(QString in);
     QString tweeCijfers(QString in);
     QString drieCijfers(QString in);
     QString grootGetal(int in);

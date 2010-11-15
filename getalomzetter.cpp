@@ -1,4 +1,5 @@
 #include "getalomzetter.h"
+#include <QRegExp>
 
 GetalOmzetter::GetalOmzetter()
     : m_basis("")
@@ -74,41 +75,64 @@ QString GetalOmzetter::toTextualNumber(QString space)
 {
     m_space = space;
 
-    // twee speciale gavallen
-    if (m_basis == "") return "";
-    if (m_basis == "0") return "nul";
+    int startRest = 0;
+    QString resultaat("");
 
-    // haal nu nog voorloopnullen weg
-    // TODO
+    // zoek start van getal
+    int startGetal = m_basis.indexOf(QRegExp("[0-9]"), 0);
+
+    while (startGetal != -1) {
+        // neem alles over tot begin van getal
+        resultaat += m_basis.mid(startRest, startGetal - startRest);
+
+        // zoek eerste niet-cijfer
+        if ((startRest = m_basis.indexOf(QRegExp("[^0-9]"), startGetal)) == -1)
+            startRest = m_basis.length();
+
+        resultaat += zetGetalOm(m_basis.mid(startGetal, startRest - startGetal));
+        startGetal = m_basis.indexOf(QRegExp("[0-9]"), startRest);
+    }
+
+    // neem de rest over
+    return resultaat + m_basis.mid(startRest);
+}
+
+// Deze method gaat ervan uit dat de hele string uit cijfers bestaat
+QString GetalOmzetter::zetGetalOm(QString in)
+{
+    // verwijder voolooopnullen
+    in.replace(QRegExp("^0+"), "");
+
+    // als dan niets overblijft bestond getal uit alleen nullen
+    if (in == "") return "nul";
 
     // als het direct gevonden is return dan
-    m_resultaat = m_units->value(m_basis);
-    if ( m_resultaat != "") return m_resultaat;
+    QString resultaat = m_units->value(in);
+    if ( resultaat != "") return resultaat;
 
-    m_werk = m_basis;
-    m_resultaat = "";
+    resultaat = "";
     m_processed = 0;
 
     do {
         // bepaal start van groep van (max) 3
-        int start = m_basis.length() - m_processed - 3;
+        int start = in.length() - m_processed - 3;
         if (start < 0) start = 0;
         // bepaal lengte van groep van (max) 3
-        int aantal = m_basis.length() - m_processed;
+        int aantal = in.length() - m_processed;
         if (aantal > 3) aantal = 3;
-        QString teVerwerken = m_basis.mid(start, aantal);
-        m_resultaat = drieCijfers(teVerwerken) + m_space + m_resultaat;
+        QString teVerwerken = in.mid(start, aantal);
+        resultaat = drieCijfers(teVerwerken) + m_space + resultaat;
         m_processed += teVerwerken.length();
         QString dt = grootGetal(m_processed);
         if (dt != "" &&
-            m_basis.length() > m_processed &&
-            m_basis.mid(start - 3, 3) != "000" &&
-            m_basis.mid(start - 3, 3) != "00" &&
-            m_basis.mid(start - 3, 3) != "0") {
-            m_resultaat = dt + m_space + m_resultaat;
+            in.length() > m_processed &&
+            in.mid(start - 3, 3) != "000" &&
+            in.mid(start - 3, 3) != "00" &&
+            in.mid(start - 3, 3) != "0") {
+            resultaat = dt + m_space + resultaat;
         }
-    } while (m_processed < m_basis.length());
-    return m_resultaat;
+    } while (m_processed < in.length());
+    return resultaat;
 }
 
 QString GetalOmzetter::tweeCijfers(QString in)
@@ -122,8 +146,8 @@ QString GetalOmzetter::tweeCijfers(QString in)
     // als niet gevonden dan samenstellen
     // eers eenheden
     res = m_units->value(in.right(1));
-    // eventueel "en" ertussen
-    if (in.left(1) > "1" && in.left(1) <= "9") res += m_space + "en" + m_space; // geen en na nul en na 1 (tien)
+    // eventueel "en" ertussen (zonder spaties)
+    if (in.left(1) > "1" && in.left(1) <= "9") res +=  "en"; // geen en na nul en na 1 (tien)
     // en dan tientallen
     res += m_units->value(in.left(1)+"0");
     if (res == "00")
@@ -145,9 +169,11 @@ QString GetalOmzetter::drieCijfers(QString in)
 
     if (in.length() == 3) {
         if (in.left(1) >= "1" && in.left(1) <= "9") {
-            resultaat = "honderd" + m_space + resultaat;
+            if (resultaat != "") resultaat = " " + resultaat;
+            resultaat = "honderd" + resultaat;
             if (in.left(1) >= "2" && in.left(1) <= "9") {
-                resultaat = m_units->value(in.left(1))+ m_space + resultaat;
+                // honderdtal ervoor zonder spatie
+                resultaat = m_units->value(in.left(1)) + resultaat;
             }
         }
     }
@@ -173,14 +199,3 @@ QString GetalOmzetter::grootGetal(int in)
     }
 }
 
-
-QString zetOm(QString in)
-{
-    // nieuwe aanpak
-    // zoek in string in map vanaf
-    // als gevonden klaar
-    // pak eerste cijfer naar string en vervang door 1
-
-    //for (int i = in.length(); )
-
-}
