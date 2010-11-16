@@ -112,30 +112,36 @@ QString GetalOmzetter::zetGetalOm(QString in)
 
     resultaat = "";
     m_processed = 0;
-    bool spaceMadatory = false;
+    bool spaceMandatory = false;
     QString space;
 
-    do {
-        // bepaal start van groep van (max) 3
-        int start = in.length() - m_processed - 3;
-        if (start < 0) start = 0;
-        // bepaal lengte van groep van (max) 3
-        int aantal = in.length() - m_processed;
-        if (aantal > 3) aantal = 3;
-        QString teVerwerken = in.mid(start, aantal);
-        space = spaceMadatory || teVerwerken.toInt() > 100 ? " " : "";
-        resultaat = drieCijfers(teVerwerken) + space + resultaat;
-        m_processed += teVerwerken.length();
-        QString dt = grootGetal(m_processed);
-        if (dt != "" &&
-            in.length() > m_processed &&        // als er nog iets voor komt
-            in.mid(start - 3, 3) != "000" &&    // en dat is
-            in.mid(start - 3, 3) != "00" &&
-            in.mid(start - 3, 3) != "0") {
-            resultaat = dt + " " + resultaat;
-            if (m_processed > 3) spaceMadatory = true;
-        }
-    } while (m_processed < in.length());
+    // als we tussen 1100 een 9999 zitten maken we er honderdtallen van
+    if (in.length() == 4 && in.mid(1,1) != "0") {
+        resultaat += tweeCijfers(in.left(2)) + "honderd ";
+        resultaat += tweeCijfers(in.right(2));
+    } else {
+        do {
+            // bepaal start van groep van (max) 3
+            int start = in.length() - m_processed - 3;
+            if (start < 0) start = 0;
+            // bepaal lengte van groep van (max) 3
+            int aantal = in.length() - m_processed;
+            if (aantal > 3) aantal = 3;
+            QString teVerwerken = in.mid(start, aantal);
+            space = spaceMandatory || teVerwerken.toInt() > 100 ? " " : "";
+            resultaat = drieCijfers(teVerwerken) + space + resultaat;
+            m_processed += teVerwerken.length();
+            QString dt = grootGetal(m_processed);
+            if (dt != "" &&
+                in.length() > m_processed &&        // als er nog iets voor komt
+                in.mid(start - 3, 3) != "000" &&    // en dat is
+                in.mid(start - 3, 3) != "00" &&
+                in.mid(start - 3, 3) != "0") {
+                resultaat = dt + " " + resultaat;
+                if (m_processed > 3) spaceMandatory = true;
+            }
+        } while (m_processed < in.length());
+    }
     return resultaat;
 }
 
@@ -152,10 +158,12 @@ QString GetalOmzetter::tweeCijfers(QString in)
     res = m_units->value(in.right(1));
     // eventueel "en" ertussen (zonder spaties)
     // behalve na nul en na 1 (vijftien etcetera)
-    if (in.left(1) >= "4" && in.left(1) <= "9") {
-        res += "en";
-    } else if (in.left(1) == "2" || in.left(1) == "3") {
-        res += QString(QChar(0x00EB)) + "n";  //  "ën"
+    if (in.left(1) > "1") {
+        if (in.right(1) == "2" || in.right(1) == "3") {
+            res += QString(QChar(0x00EB)) + "n";  //  "ën"
+        } else {
+            res += "en";
+        }
     }
     // en dan tientallen
     res += m_units->value(in.left(1)+"0");
