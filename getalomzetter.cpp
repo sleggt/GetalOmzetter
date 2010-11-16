@@ -112,6 +112,8 @@ QString GetalOmzetter::zetGetalOm(QString in)
 
     resultaat = "";
     m_processed = 0;
+    bool spaceMadatory = false;
+    QString space;
 
     do {
         // bepaal start van groep van (max) 3
@@ -121,15 +123,17 @@ QString GetalOmzetter::zetGetalOm(QString in)
         int aantal = in.length() - m_processed;
         if (aantal > 3) aantal = 3;
         QString teVerwerken = in.mid(start, aantal);
-        resultaat = drieCijfers(teVerwerken) + m_space + resultaat;
+        space = spaceMadatory || teVerwerken.toInt() > 100 ? " " : "";
+        resultaat = drieCijfers(teVerwerken) + space + resultaat;
         m_processed += teVerwerken.length();
         QString dt = grootGetal(m_processed);
         if (dt != "" &&
-            in.length() > m_processed &&
-            in.mid(start - 3, 3) != "000" &&
+            in.length() > m_processed &&        // als er nog iets voor komt
+            in.mid(start - 3, 3) != "000" &&    // en dat is
             in.mid(start - 3, 3) != "00" &&
             in.mid(start - 3, 3) != "0") {
-            resultaat = dt + m_space + resultaat;
+            resultaat = dt + " " + resultaat;
+            if (m_processed > 3) spaceMadatory = true;
         }
     } while (m_processed < in.length());
     return resultaat;
@@ -147,7 +151,12 @@ QString GetalOmzetter::tweeCijfers(QString in)
     // eers eenheden
     res = m_units->value(in.right(1));
     // eventueel "en" ertussen (zonder spaties)
-    if (in.left(1) > "1" && in.left(1) <= "9") res +=  "en"; // geen en na nul en na 1 (tien)
+    // behalve na nul en na 1 (vijftien etcetera)
+    if (in.left(1) >= "4" && in.left(1) <= "9") {
+        res += "en";
+    } else if (in.left(1) == "2" || in.left(1) == "3") {
+        res += QString(QChar(0x00EB)) + "n";  //  "ën"
+    }
     // en dan tientallen
     res += m_units->value(in.left(1)+"0");
     if (res == "00")

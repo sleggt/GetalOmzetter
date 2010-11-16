@@ -6,7 +6,7 @@
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
-    , m_inputText(new QLineEdit("<voer getal in>"))
+    , m_inputText(new QLineEdit(""))
     , m_resultText(new QTextEdit(""))
 {
     m_inputText->selectAll();
